@@ -31,29 +31,24 @@ void matrix_mult(double* a, double* b, double* res, size_t size)
 			for (int jb = 0; jb < isize; jb += size_block_y) {
 				int iEnd = std::min(isize, ib + size_block_y);
 				int jEnd = std::min(isize, jb + size_block_y);
-				int kEnd = kb + size_block_x;
+				int kEnd = std::min(isize, kb + size_block_x);
 				for (int i = ib; i < iEnd; i++) {
-					double* iRes = res + i * isize;
-					double* iB_0 = b + kb * isize;
-					double* iB_1 = b + (kb + 1) * isize;
-					double* iB_2 = b + (kb + 2) * isize;
-					double* iB_3 = b + (kb + 3) * isize;
-					double iA_0 = a[i * isize + kb];
-					double iA_1 = a[i * isize + kb + 1];
-					double iA_2 = a[i * isize + kb + 2];
-					double iA_3 = a[i * isize + kb + 3];
+#pragma omp unroll
+					for (int k = kb; k < kEnd; k++){
+						double* iRes = res + i * isize;
+						double* iB = b + k * isize;
+						double iA = a[i * isize + k];
 #pragma omp simd
-					for (int j = jb; j < jEnd; j++) {
-						iRes[j] += iA_0 * iB_0[j];
-						iRes[j] += iA_1 * iB_1[j];
-						iRes[j] += iA_2 * iB_2[j];
-						iRes[j] += iA_3 * iB_3[j];
+						for (int j = jb; j < jEnd; j++) {
+							iRes[j] += iA * iB[j];
+						}
 					}
 				}
 			}
 		}
 	}
 }
+
 
 int main()
 {
